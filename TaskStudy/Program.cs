@@ -6,7 +6,7 @@ namespace TaskStudy
     class Program
     {
         //https://www.kekyo.net/2016/12/06/6186
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
             Console.WriteLine($"Start");
 

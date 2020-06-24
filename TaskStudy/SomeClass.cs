@@ -4,10 +4,11 @@ using ValueTaskSupplement;
 
 namespace TaskStudy
 {
+    /// <summary>プロパティを取得する度にHeavyMethodが実行される</summary>
     class SomeClass1
     {
-        public int Val => _val.Result;
-        private ValueTask<int> _val => HeavyMethod();
+        public int Val => GetValAsync.Result;
+        private ValueTask<int> GetValAsync => HeavyMethod();
 
         private static async ValueTask<int> HeavyMethod()
         {
@@ -17,6 +18,7 @@ namespace TaskStudy
         }
     }
 
+    /// <summary>プロパティ取得の初回のみHeavyMethodが実行される</summary>
     class SomeClass2
     {
         public int Val => _val;
@@ -30,6 +32,7 @@ namespace TaskStudy
         }
     }
 
+    /// <summary>プロパティ取得の初回のみHeavyMethodが実行される(ValueTaskSupplement使用)</summary>
     class SomeClass3
     {
         public int Val => _val.Result;
@@ -41,10 +44,9 @@ namespace TaskStudy
         });
     }
 
+    /// <summary>プロパティ取得時に、値が生成されるまで待つ</summary>
     class SomeClass4
     {
-        private int _val;
-
         public int Val
         {
             get
@@ -56,32 +58,33 @@ namespace TaskStudy
                 return _val;
             }
         }
+        private int _val;
 
-        private readonly Task myTask;
         private bool taskFinished;
 
         public SomeClass4()
         {
-            myTask = HeavyMethod().ContinueWith(t =>
+            // 戻り値のTask捨てるの良くない（内部で例外が発生すると永久に終わらない）
+            _ = HeavyMethod().ContinueWith(t =>
             {
-                Console.WriteLine("Waiting Complete");
+                _val = t.Result;
+                Console.WriteLine("Value is prepared.");
                 taskFinished = true;
             });
         }
 
-        private async Task HeavyMethod()
+        private static async Task<int> HeavyMethod()
         {
             Console.WriteLine("StartWait4");
             await Task.Delay(2000);
-            _val = 4;
+            return 4;
         }
 
-        private async Task WaitAsync()
+        private static async Task WaitAsync()
         {
             Console.Write("w");
             await Task.Delay(500);
         }
-
     }
 
 }
